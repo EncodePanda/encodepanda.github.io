@@ -1,0 +1,32 @@
+---
+title: Issues with MTL
+author: Julius
+published: false
+---
+
+
+rabbit [10:11 PM]
+hi, question, can we gather here the list of all the issues with the MTL way of writing software, i’ll later take that list and build a bigger example showing all those issues and then magically show how polysemy solves it all :slightly_smiling_face:
+so far this is what I’ve got:.
+- I can not have `MonadError MyAppError m, MonadError SomeOtherError m`
+- at the end of the world I’m still stuck with monad transformers, I need to eventualy have ExceptT StateT ReaderT stack one on top of the other (if for example I want to manage state from IORef I’m screwed. Or for example if ReaderT was giving me some configuration, maybe i want to read that config from system variables. But I’m stuck with the monad stack :) (edited)
+
+
+rabbit [10:19 PM]
+^^ the above is from my personal experience, but you were mentioning other issues if I recall
+
+isovector [12:54 AM]
+correct
+
+rabbit [10:32 AM]
+so is that all issues or are there more that i’m not aware of ?
+- the other thing will be testing this whole thing, right? it seems that i might get stuck with production instances for my code
+
+isovector [2:31 PM]
+also correct
+and decomposability
+it's not very feasible to decompose an effect into other effects
+in mtl
+
+rabbit [9:55 PM]
+right, cool, thx
