@@ -1,6 +1,6 @@
 ---
 title: Building TODO app in Haskell with Polysemy, Aeson, Servant and Brick
-subtitle: test
+desc: Building a TODO app using servant, aeson, polysemy and brick
 author: Pawel Szulc
 tags: haskell, polysemy, aeson, servant, brick, free monads
 ---
@@ -122,17 +122,17 @@ data Todo = Todo
 
 We are using `Text` from [Data.Text](https://hackage.haskell.org/package/text) package, which we have to add to our dependency list
 
-```yaml
+```diff
 diff --git a/package.yaml b/package.yaml
 index 2d9a1e9..e6a9c23 100644
 --- a/package.yaml
 +++ b/package.yaml
 @@ -14,6 +14,7 @@ description:         Please see the README on GitHub at <https://github.com/rabb
- 
+
  dependencies:
  - base >= 4.7 && < 5
 +- text
- 
+
  library:
    source-dirs: src
 
@@ -153,7 +153,7 @@ index e6a9c23..3edbfaf 100644
  - base >= 4.7 && < 5
  - text
 +- aeson
- 
+
  library:
    source-dirs: src
 
@@ -163,15 +163,15 @@ Nothing is stopping us to craft those instances by hand for our `Todo` data type
 
 `Todo` does not have instance of `Generic` yet but we can quickly derive it. We first need to enable `DeriveGeneric` extension globally for our project.
 
-```yaml
+```diff
 diff --git a/package.yaml b/package.yaml
 index 3edbfaf..8d626aa 100644
 --- a/package.yaml
 +++ b/package.yaml
 @@ -12,6 +12,9 @@ extra-source-files:
- 
+
  description:         Please see the README on GitHub at <https://github.com/rabbitonweb/bp-servant-polysemy-todo-ap>
- 
+
 +default-extensions:
 +- DeriveGeneric
 +
@@ -185,18 +185,18 @@ Note: we could have just add pargma to `Todo.hs`, enabling `DeriveGeneric` local
 
 This allows us to derive `Generic` for our `Todo` data type:
 
-```haskell
+```diff
 diff --git a/src/Todo.hs b/src/Todo.hs
 index f0bbe40..2d7427a 100644
 --- a/src/Todo.hs
 +++ b/src/Todo.hs
 @@ -1,8 +1,9 @@
  module Todo where
- 
+
 -import           Data.Text (Text)
 +import           Data.Text    (Text)
 +import           GHC.Generics
- 
+
  data Todo = Todo
    { title     :: Text
    , completed :: Bool
