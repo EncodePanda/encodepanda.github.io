@@ -4,7 +4,13 @@
       <h2 class="title mb-2">$title$</h2>
       <div class="meta mb-3"><span class="date">$date$</span><span class="time">5 min read</span></div>
     </header>
-
+    $if(disclaimer)$
+    <section class="cta-section theme-bg-light py-2">
+	    <div class="container text-info">
+		    <div class="intro">$disclaimer$</div>
+	    </div><!--//container-->
+    </section>
+    $endif$
     <div class="blog-post-body">
       $body$
     </div>
