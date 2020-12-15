@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Encode Panda - Getting acquainted with Lens</title>
+    <title>Encode Panda - Getting acquainted with Lens (part 1)</title>
 
     <!-- Meta -->
     <meta charset="utf-8">
@@ -13,13 +13,13 @@
 
     <!-- FontAwesome JS-->
     <script defer src="https://use.fontawesome.com/releases/v5.7.1/js/all.js" integrity="sha384-eVEQC9zshBn0rFj4+TU78eNA19HMNigMviK/PU/FFjLXqa/GKPgX58rvt5Z8PLs7" crossorigin="anonymous"></script>
-
     <!-- Theme CSS -->
-    <link id="theme-style" rel="stylesheet" href="../assets/css/theme-4.css">
-    <link rel="stylesheet" href="assets/plugins/bootstrap/css/bootstrap.min.css" <link rel="stylesheet" href="assets/plugins/highlight/styles/idea.css">
-    <script src="assets/plugins/highlight/highlight.pack.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
-    <!-- <link rel="stylesheet" href="/css/breezeDark.css" /> -->
+    <link id="theme-style" rel="stylesheet" href="../assets/css/theme-2.css">
+    <!-- <link rel="stylesheet" href="assets/plugins/bootstrap/css/bootstrap.min.css" -->
+    <!-- <link rel="stylesheet" href="assets/plugins/highlight/styles/atelier-cave-light.css"> -->
+    <!-- <script src="assets/plugins/highlight/highlight.pack.js"></script> -->
+    <!-- <script>hljs.initHighlightingOnLoad();</script> -->
+    <link rel="stylesheet" href="../css/tango.css" />
 
 </head>
 
@@ -73,18 +73,355 @@
             <article class="blog-post px-3 py-5 p-md-5">
   <div class="container">
     <header class="blog-post-header">
-      <h2 class="title mb-2">Getting acquainted with Lens</h2>
+      <h2 class="title mb-2">Getting acquainted with Lens (part 1)</h2>
       <div class="meta mb-3"><span class="date">December 15, 2020</span><span class="time">5 min read</span></div>
     </header>
     
-    <section class="cta-section theme-bg-light py-2">
+    <section class="cta-section theme-bg-light py-3">
 	    <div class="container text-info">
-		    <div class="intro">This blog post will be available on 15th December 2020 as part of <a href="https://adventofhaskell.com/">Advent of Haskell 2020</a></div>
+		    <div class="intro">Content of this blog and the source code is <a href="https://github.com/EncodePanda/bp-getting-acquainted-with-lens">available on Github</a>. Repository is divided into small commits so that you can follow along if you prefer jumping straight into the code. <br /> This post is based on a <a href="https://www.youtube.com/watch?v=LBiFYbQMAXc">talk</a> I did at Haskell.Love 2020</div>
 	    </div><!--//container-->
     </section>
     
     <div class="blog-post-body">
-      
+      <h3 id="introduction">Introduction</h3>
+<p>In this post we will explore a concept of a Lens. More concretely the <a href="https://hackage.haskell.org/package/lens">Lens library</a>.</p>
+<ol type="1">
+<li>What problem they are trying to solve?</li>
+<li>How we can use them?</li>
+<li>How they are being implemented?</li>
+</ol>
+<h3 id="what-problem-they-are-trying-to-solve">What problem they are trying to solve?</h3>
+<p>It is my observation that any newcommer to the Haskell ecosystem, who gets excited with the language, stumbles upon two limitations of the language design. Mainly:</p>
+<ol type="1">
+<li>Record syntax</li>
+<li>Strings</li>
+</ol>
+<p>Those two are suprising to newcomers, especially because both record syntax and Strings are considered a no-brainer in almost every other programming language. Writing about String representation in Haskell deserves a blog post on its own. Today we want to focus on a <strong>record syntax</strong>, trying to understand what are its limitations and main source of frustration. And frustrating in did it is. Below few quotes scrapped from the Internet to back that claim.</p>
+<blockquote>
+<p><em>“The record system is a continual source of pain”</em> - Stephen Diehl</p>
+</blockquote>
+<blockquote>
+<p><em>“What is your least favorite thing about Haskell? Records are still tedious”</em> - 2018 State of Haskell Survey</p>
+</blockquote>
+<blockquote>
+<p><em>“Shitty records.”</em> - Someone on reddit</p>
+</blockquote>
+<h3 id="an-example">An example</h3>
+<p><a href="https://en.wikipedia.org/wiki/Linus_Torvalds">Someone famous</a> once said “Talk is cheap, show me the code”. In that sprit let’s explore an example project in which those problems are clearly visible.</p>
+<p>We will use the latest version of GHC Haskell</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" title="1"><span class="ex">The</span> Glorious Glasgow Haskell Compilation System, version 8.10.2</a></code></pre></div>
+<p>and a standard cabal project</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="ex">cabal-version</span>: 2.1</a>
+<a class="sourceLine" id="cb2-2" title="2"></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="ex">name</span>:           bp-getting-acquainted-with-lens</a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="ex">version</span>:        0.1.0.0</a>
+<a class="sourceLine" id="cb2-5" title="5"><span class="ex">license-file</span>:   LICENSE</a>
+<a class="sourceLine" id="cb2-6" title="6"><span class="ex">author</span>:         Paweł Szulc</a>
+<a class="sourceLine" id="cb2-7" title="7"><span class="ex">maintainer</span>:     Paweł Szulc</a>
+<a class="sourceLine" id="cb2-8" title="8"><span class="ex">copyright</span>:      Paweł Szulc</a>
+<a class="sourceLine" id="cb2-9" title="9"><span class="ex">category</span>:       BlogPost</a>
+<a class="sourceLine" id="cb2-10" title="10"><span class="ex">build-type</span>:     Simple</a>
+<a class="sourceLine" id="cb2-11" title="11"></a>
+<a class="sourceLine" id="cb2-12" title="12"><span class="ex">extra-source-files</span>:</a>
+<a class="sourceLine" id="cb2-13" title="13">    <span class="ex">README.md</span></a>
+<a class="sourceLine" id="cb2-14" title="14"></a>
+<a class="sourceLine" id="cb2-15" title="15"><span class="ex">source-repository</span> head</a>
+<a class="sourceLine" id="cb2-16" title="16">  <span class="ex">type</span>: git</a>
+<a class="sourceLine" id="cb2-17" title="17">  <span class="ex">location</span>: https://github.com/EncodePanda/bp-getting-acquainted-with-lens</a>
+<a class="sourceLine" id="cb2-18" title="18"></a>
+<a class="sourceLine" id="cb2-19" title="19"><span class="ex">library</span></a>
+<a class="sourceLine" id="cb2-20" title="20">  <span class="ex">exposed-modules</span>:</a>
+<a class="sourceLine" id="cb2-21" title="21">      <span class="ex">EncodePanda.Lens</span></a>
+<a class="sourceLine" id="cb2-22" title="22">  <span class="ex">hs-source-dirs</span>:</a>
+<a class="sourceLine" id="cb2-23" title="23">      <span class="ex">src</span></a>
+<a class="sourceLine" id="cb2-24" title="24">  <span class="ex">build-depends</span>:</a>
+<a class="sourceLine" id="cb2-25" title="25">        <span class="ex">base</span> <span class="op">&gt;</span>=4.7 <span class="kw">&amp;&amp;</span> <span class="op">&lt;</span><span class="ex">5</span></a>
+<a class="sourceLine" id="cb2-26" title="26">  <span class="ex">default-language</span>: Haskell2010</a></code></pre></div>
+<p>Imagine we are writing a tool allowing conference organizers to maintain their events. We have a datatype <code>Conference</code></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">data</span> <span class="dt">Conference</span> <span class="fu">=</span> <span class="dt">Conference</span></a>
+<a class="sourceLine" id="cb3-2" title="2">  {<span class="ot"> organizer ::</span> <span class="dt">Organizer</span></a>
+<a class="sourceLine" id="cb3-3" title="3">  ,<span class="ot"> speakers  ::</span> [<span class="dt">Speaker</span>]</a>
+<a class="sourceLine" id="cb3-4" title="4">  } <span class="kw">deriving</span> <span class="dt">Show</span></a></code></pre></div>
+<p>where <code>Organizer</code> is</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">data</span> <span class="dt">Organizer</span> <span class="fu">=</span> <span class="dt">Organizer</span></a>
+<a class="sourceLine" id="cb4-2" title="2">  {<span class="ot"> name    ::</span> <span class="dt">Name</span></a>
+<a class="sourceLine" id="cb4-3" title="3">  ,<span class="ot"> contact ::</span> <span class="dt">Contact</span></a>
+<a class="sourceLine" id="cb4-4" title="4">  } <span class="kw">deriving</span> <span class="dt">Show</span></a></code></pre></div>
+<p>and <code>Speaker</code> is</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">data</span> <span class="dt">Speaker</span> <span class="fu">=</span> <span class="dt">Speaker</span></a>
+<a class="sourceLine" id="cb5-2" title="2">  {<span class="ot"> slidesReady ::</span> <span class="dt">Bool</span></a>
+<a class="sourceLine" id="cb5-3" title="3">  } <span class="kw">deriving</span> <span class="dt">Show</span></a></code></pre></div>
+<p>Organizer has a <code>Name</code> and <code>Address</code>. <code>Name</code> is a simple record with <code>firstName</code> and <code>lastName</code></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">data</span> <span class="dt">Name</span> <span class="fu">=</span> <span class="dt">Name</span></a>
+<a class="sourceLine" id="cb6-2" title="2">  {<span class="ot"> firstName ::</span> <span class="dt">String</span></a>
+<a class="sourceLine" id="cb6-3" title="3">  ,<span class="ot"> lastName  ::</span> <span class="dt">String</span></a>
+<a class="sourceLine" id="cb6-4" title="4">  } <span class="kw">deriving</span> <span class="dt">Show</span></a></code></pre></div>
+<p>and <code>Address</code> encapsulates <code>street</code>, <code>city</code> and <code>country</code></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">data</span> <span class="dt">Address</span> <span class="fu">=</span> <span class="dt">Address</span></a>
+<a class="sourceLine" id="cb7-2" title="2">  {<span class="ot"> street  ::</span> <span class="dt">String</span></a>
+<a class="sourceLine" id="cb7-3" title="3">  ,<span class="ot"> city    ::</span> <span class="dt">String</span></a>
+<a class="sourceLine" id="cb7-4" title="4">  ,<span class="ot"> country ::</span> <span class="dt">String</span></a>
+<a class="sourceLine" id="cb7-5" title="5">  } <span class="kw">deriving</span> <span class="dt">Show</span></a></code></pre></div>
+<p>Now we just need example of a conference organizer, a value that we could play with in the REPL . While creating this blog post I could not miss the opportunity to pay my tribute to <a href="https://twitter.com/Oli_kitty">Oli Makhasoeva</a> - one of the best conference organizers on the planet, master mind behind such events as <a href="http://haskell.love">Haskell Love</a> or <a href="http://scala.love/conf">Scala Love</a>.</p>
+<p>Let’s create a value of type <code>Organizer</code> called <code>oli</code></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" title="1"><span class="ot">oli ::</span> <span class="dt">Organizer</span></a>
+<a class="sourceLine" id="cb8-2" title="2">oli <span class="fu">=</span> <span class="dt">Organizer</span></a>
+<a class="sourceLine" id="cb8-3" title="3">  { name <span class="fu">=</span> <span class="dt">Name</span> <span class="st">&quot;Oli&quot;</span> <span class="st">&quot;Makhasoeva&quot;</span></a>
+<a class="sourceLine" id="cb8-4" title="4">  , contact <span class="fu">=</span> classified</a>
+<a class="sourceLine" id="cb8-5" title="5">  }</a></code></pre></div>
+<h3 id="fetching-values-from-records">Fetching values from records</h3>
+<p>We can observe that both <code>name</code> and <code>contact</code> are in fact accessor functions that allow us to retrieve values from records</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" title="1">ghci<span class="fu">&gt;</span> <span class="fu">:</span>l src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens.hs</a>
+<a class="sourceLine" id="cb9-2" title="2">ghci<span class="fu">&gt;</span> <span class="fu">:</span>t name</a>
+<a class="sourceLine" id="cb9-3" title="3"><span class="ot">      name ::</span> <span class="dt">Organizer</span> <span class="ot">-&gt;</span> <span class="dt">Name</span></a>
+<a class="sourceLine" id="cb9-4" title="4">ghci<span class="fu">&gt;</span> name oli</a>
+<a class="sourceLine" id="cb9-5" title="5">      <span class="dt">Name</span> {firstName <span class="fu">=</span> <span class="st">&quot;Oli&quot;</span>, lastName <span class="fu">=</span> <span class="st">&quot;Makhasoeva&quot;</span>}</a>
+<a class="sourceLine" id="cb9-6" title="6">ghci<span class="fu">&gt;</span> <span class="fu">:</span>t contact</a>
+<a class="sourceLine" id="cb9-7" title="7"><span class="ot">      contact ::</span> <span class="dt">Organizer</span> <span class="ot">-&gt;</span> <span class="dt">Contact</span></a>
+<a class="sourceLine" id="cb9-8" title="8">ghci<span class="fu">&gt;</span> contact oli</a>
+<a class="sourceLine" id="cb9-9" title="9">      <span class="dt">Contact</span> {address <span class="fu">=</span> <span class="dt">Address</span> {street <span class="fu">=</span> <span class="st">&quot;Class&quot;</span>, city <span class="fu">=</span> <span class="st">&quot;ified&quot;</span>, country <span class="fu">=</span> <span class="st">&quot;Classified&quot;</span>}, email <span class="fu">=</span> <span class="st">&quot;oli@haskell.love&quot;</span>}</a></code></pre></div>
+<p>This can even look nicer if we use <code>&amp;</code> operator from <code>Data.Function</code></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb10-1" title="1">ghci<span class="fu">&gt;</span> <span class="kw">import</span> <span class="dt">Data.Function</span> ((&amp;))</a>
+<a class="sourceLine" id="cb10-2" title="2">ghci<span class="fu">&gt;</span> <span class="fu">:</span>t (<span class="fu">&amp;</span>)</a>
+<a class="sourceLine" id="cb10-3" title="3"><span class="ot">      (&amp;) ::</span> a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> b</a></code></pre></div>
+<p>Here we see that <code>&amp;</code> is a simple function application, where instead of providing function name and the argument (as we would normally do)</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb11-1" title="1">ghci<span class="fu">&gt;</span> <span class="fu">length</span> [<span class="dv">4</span>, <span class="dv">6</span>, <span class="dv">8</span>]</a>
+<a class="sourceLine" id="cb11-2" title="2">      <span class="dv">3</span></a></code></pre></div>
+<p>we provide first the argument and then the function name</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb12-1" title="1">ghci<span class="fu">&gt;</span> [<span class="dv">4</span>, <span class="dv">6</span>, <span class="dv">8</span>] <span class="fu">&amp;</span> <span class="fu">length</span></a>
+<a class="sourceLine" id="cb12-2" title="2">      <span class="dv">3</span></a></code></pre></div>
+<p>This allow us to change previous call to <code>name</code> from</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb13-1" title="1">ghci<span class="fu">&gt;</span> name oli</a>
+<a class="sourceLine" id="cb13-2" title="2">      <span class="dt">Name</span> {firstName <span class="fu">=</span> <span class="st">&quot;Oli&quot;</span>, lastName <span class="fu">=</span> <span class="st">&quot;Makhasoeva&quot;</span>}</a></code></pre></div>
+<p>to</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb14-1" title="1">ghci<span class="fu">&gt;</span> oli <span class="fu">&amp;</span> name</a>
+<a class="sourceLine" id="cb14-2" title="2">      <span class="dt">Name</span> {firstName <span class="fu">=</span> <span class="st">&quot;Oli&quot;</span>, lastName <span class="fu">=</span> <span class="st">&quot;Makhasoeva&quot;</span>}</a></code></pre></div>
+<p>It does not seem much at first, but you can observe that this approach composes nicely when you want to read value of a deeply nested record.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb15-1" title="1">ghci<span class="fu">&gt;</span> oli <span class="fu">&amp;</span> name <span class="fu">&amp;</span> firstName</a>
+<a class="sourceLine" id="cb15-2" title="2">      <span class="st">&quot;Oli&quot;</span></a></code></pre></div>
+<p>This resembles dot-like record access that is available in other languages. Correctly formated makes accessing deeply nested values a pleasure experience</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb16-1" title="1"><span class="ot">organizerCountry ::</span> <span class="dt">Conference</span> <span class="ot">-&gt;</span> <span class="dt">String</span></a>
+<a class="sourceLine" id="cb16-2" title="2">organizerCountry conf <span class="fu">=</span></a>
+<a class="sourceLine" id="cb16-3" title="3">  conf <span class="fu">&amp;</span> organizer</a>
+<a class="sourceLine" id="cb16-4" title="4">       <span class="fu">&amp;</span> contact</a>
+<a class="sourceLine" id="cb16-5" title="5">       <span class="fu">&amp;</span> address</a>
+<a class="sourceLine" id="cb16-6" title="6">       <span class="fu">&amp;</span> country</a></code></pre></div>
+<p>But when we do a slight modification to our code, where not only <code>Organizer</code> has a <code>name</code> field</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb17-1" title="1"> module EncodePanda.Lens2 where</a>
+<a class="sourceLine" id="cb17-2" title="2"> </a>
+<a class="sourceLine" id="cb17-3" title="3"> import Data.Function ((&amp;))</a>
+<a class="sourceLine" id="cb17-4" title="4"> </a>
+<a class="sourceLine" id="cb17-5" title="5"> -- start snippet conference-datatype</a>
+<a class="sourceLine" id="cb17-6" title="6"> data Conference = Conference</a>
+<a class="sourceLine" id="cb17-7" title="7"><span class="st">-  { organizer :: Organizer</span></a>
+<a class="sourceLine" id="cb17-8" title="8"><span class="va">+  { name :: String</span></a>
+<a class="sourceLine" id="cb17-9" title="9"><span class="va">+  , organizer :: Organizer</span></a>
+<a class="sourceLine" id="cb17-10" title="10">   , speakers  :: [Speaker]</a>
+<a class="sourceLine" id="cb17-11" title="11">   } deriving Show</a>
+<a class="sourceLine" id="cb17-12" title="12"> -- end snippet conference-datatype</a>
+<a class="sourceLine" id="cb17-13" title="13"> </a>
+<a class="sourceLine" id="cb17-14" title="14"> -- start snippet speaker-datatype</a>
+<a class="sourceLine" id="cb17-15" title="15"> data Speaker = Speaker</a>
+<a class="sourceLine" id="cb17-16" title="16"><span class="st">-  { slidesReady :: Bool</span></a>
+<a class="sourceLine" id="cb17-17" title="17"><span class="va">+  { name :: Name</span></a>
+<a class="sourceLine" id="cb17-18" title="18"><span class="va">+  , slidesReady :: Bool</span></a>
+<a class="sourceLine" id="cb17-19" title="19">   } deriving Show</a>
+<a class="sourceLine" id="cb17-20" title="20"> -- end snippet speaker-datatype</a>
+<a class="sourceLine" id="cb17-21" title="21"> </a></code></pre></div>
+<p>the code suddenly stops compiling</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb18-1" title="1"><span class="fu">$&gt;</span> cabal build</a>
+<a class="sourceLine" id="cb18-2" title="2"></a>
+<a class="sourceLine" id="cb18-3" title="3">src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">22</span><span class="fu">:</span><span class="dv">5</span><span class="fu">:</span> <span class="fu">error:</span></a>
+<a class="sourceLine" id="cb18-4" title="4">    <span class="dt">Multiple</span> declarations <span class="kw">of</span> ‘name’</a>
+<a class="sourceLine" id="cb18-5" title="5">    <span class="dt">Declared</span> at<span class="fu">:</span> src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">15</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb18-6" title="6">                 src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">22</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb18-7" title="7">   <span class="fu">|</span></a>
+<a class="sourceLine" id="cb18-8" title="8"><span class="dv">22</span> <span class="fu">|</span>   {<span class="ot"> name ::</span> <span class="dt">Name</span></a>
+<a class="sourceLine" id="cb18-9" title="9">   <span class="fu">|</span>     <span class="fu">^^^^</span></a>
+<a class="sourceLine" id="cb18-10" title="10"></a>
+<a class="sourceLine" id="cb18-11" title="11">src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">22</span><span class="fu">:</span><span class="dv">5</span><span class="fu">:</span> <span class="fu">error:</span></a>
+<a class="sourceLine" id="cb18-12" title="12">    <span class="dt">Multiple</span> declarations <span class="kw">of</span> ‘name’</a>
+<a class="sourceLine" id="cb18-13" title="13">    <span class="dt">Declared</span> at<span class="fu">:</span> src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">7</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb18-14" title="14">                 src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">22</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb18-15" title="15">   <span class="fu">|</span></a>
+<a class="sourceLine" id="cb18-16" title="16"><span class="dv">22</span> <span class="fu">|</span>   {<span class="ot"> name ::</span> <span class="dt">Name</span></a>
+<a class="sourceLine" id="cb18-17" title="17">   <span class="fu">|</span>     <span class="fu">^^^^</span></a></code></pre></div>
+<p>There is one trick we could do make it work… Have you guess it? Yes, it is GHC, we can always add a language extension</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb19-1" title="1"><span class="va">+{-# LANGUAGE DuplicateRecordFields #-}</span></a>
+<a class="sourceLine" id="cb19-2" title="2"> module EncodePanda.Lens2 where</a></code></pre></div>
+<p>And things compile again!</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb20-1" title="1"><span class="fu">$&gt;</span> cabal build</a>
+<a class="sourceLine" id="cb20-2" title="2"></a>
+<a class="sourceLine" id="cb20-3" title="3"><span class="dt">Resolving</span> dependencies<span class="fu">...</span></a>
+<a class="sourceLine" id="cb20-4" title="4"><span class="dt">Build</span> profile<span class="fu">:</span> <span class="fu">-</span>w ghc<span class="fu">-</span><span class="fl">8.10</span><span class="fu">.</span><span class="dv">2</span> <span class="fu">-</span><span class="dt">O1</span></a>
+<a class="sourceLine" id="cb20-5" title="5"><span class="dt">In</span> order, the following will be built (use <span class="fu">-</span>v for more details)<span class="fu">:</span></a>
+<a class="sourceLine" id="cb20-6" title="6"> <span class="fu">-</span> bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">-</span><span class="fl">0.1</span><span class="fu">.</span><span class="fl">0.0</span> (lib) (configuration changed)</a>
+<a class="sourceLine" id="cb20-7" title="7"><span class="dt">Configuring</span> library for bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">-</span><span class="fl">0.1</span><span class="fu">.</span><span class="fl">0.0</span><span class="fu">..</span></a>
+<a class="sourceLine" id="cb20-8" title="8"><span class="dt">Preprocessing</span> library for bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">-</span><span class="fl">0.1</span><span class="fu">.</span><span class="fl">0.0</span><span class="fu">..</span></a>
+<a class="sourceLine" id="cb20-9" title="9"><span class="dt">Building</span> library for bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">-</span><span class="fl">0.1</span><span class="fu">.</span><span class="fl">0.0</span><span class="fu">..</span></a>
+<a class="sourceLine" id="cb20-10" title="10">[<span class="dv">1</span> <span class="kw">of</span> <span class="dv">2</span>] <span class="dt">Compiling</span> <span class="dt">EncodePanda.Lens</span> ( src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens.hs, <span class="fu">/</span><span class="dt">Users</span><span class="fu">/</span>rabbit<span class="fu">/</span>projects<span class="fu">/</span>bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">/</span>dist<span class="fu">-</span>newstyle<span class="fu">/</span>build<span class="fu">/</span>x86_64<span class="fu">-</span>osx<span class="fu">/</span>ghc<span class="fu">-</span><span class="fl">8.10</span><span class="fu">.</span><span class="dv">2</span><span class="fu">/</span>bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">-</span><span class="fl">0.1</span><span class="fu">.</span><span class="fl">0.0</span><span class="fu">/</span>build<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens.o, <span class="fu">/</span><span class="dt">Users</span><span class="fu">/</span>rabbit<span class="fu">/</span>projects<span class="fu">/</span>bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">/</span>dist<span class="fu">-</span>newstyle<span class="fu">/</span>build<span class="fu">/</span>x86_64<span class="fu">-</span>osx<span class="fu">/</span>ghc<span class="fu">-</span><span class="fl">8.10</span><span class="fu">.</span><span class="dv">2</span><span class="fu">/</span>bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">-</span><span class="fl">0.1</span><span class="fu">.</span><span class="fl">0.0</span><span class="fu">/</span>build<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens.dyn_o ) [flags changed]</a>
+<a class="sourceLine" id="cb20-11" title="11">[<span class="dv">2</span> <span class="kw">of</span> <span class="dv">2</span>] <span class="dt">Compiling</span> <span class="dt">EncodePanda.Lens2</span> ( src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs, <span class="fu">/</span><span class="dt">Users</span><span class="fu">/</span>rabbit<span class="fu">/</span>projects<span class="fu">/</span>bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">/</span>dist<span class="fu">-</span>newstyle<span class="fu">/</span>build<span class="fu">/</span>x86_64<span class="fu">-</span>osx<span class="fu">/</span>ghc<span class="fu">-</span><span class="fl">8.10</span><span class="fu">.</span><span class="dv">2</span><span class="fu">/</span>bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">-</span><span class="fl">0.1</span><span class="fu">.</span><span class="fl">0.0</span><span class="fu">/</span>build<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.o, <span class="fu">/</span><span class="dt">Users</span><span class="fu">/</span>rabbit<span class="fu">/</span>projects<span class="fu">/</span>bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">/</span>dist<span class="fu">-</span>newstyle<span class="fu">/</span>build<span class="fu">/</span>x86_64<span class="fu">-</span>osx<span class="fu">/</span>ghc<span class="fu">-</span><span class="fl">8.10</span><span class="fu">.</span><span class="dv">2</span><span class="fu">/</span>bp<span class="fu">-</span>getting<span class="fu">-</span>acquainted<span class="fu">-</span>with<span class="fu">-</span>lens<span class="fu">-</span><span class="fl">0.1</span><span class="fu">.</span><span class="fl">0.0</span><span class="fu">/</span>build<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.dyn_o )</a></code></pre></div>
+<p>But when we try to use the <code>name</code> function</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb21-1" title="1"><span class="ot">organizerName ::</span> <span class="dt">Conference</span> <span class="ot">-&gt;</span> <span class="dt">Name</span></a>
+<a class="sourceLine" id="cb21-2" title="2">organizerName conference <span class="fu">=</span></a>
+<a class="sourceLine" id="cb21-3" title="3">  conference <span class="fu">&amp;</span> organizer <span class="fu">&amp;</span> name</a></code></pre></div>
+<p>compiler gives us a quick reality check</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb22-1" title="1">src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">76</span><span class="fu">:</span><span class="dv">28</span><span class="fu">:</span> <span class="fu">error:</span></a>
+<a class="sourceLine" id="cb22-2" title="2">    <span class="dt">Ambiguous</span> occurrence ‘name’</a>
+<a class="sourceLine" id="cb22-3" title="3">    <span class="dt">It</span> could refer to</a>
+<a class="sourceLine" id="cb22-4" title="4">       <span class="fu">either</span> the field ‘name’, defined at src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">23</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb22-5" title="5">           <span class="fu">or</span> the field ‘name’, defined at src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">16</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb22-6" title="6">           <span class="fu">or</span> the field ‘name’, defined at src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">8</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb22-7" title="7">   <span class="fu">|</span></a>
+<a class="sourceLine" id="cb22-8" title="8"><span class="dv">76</span> <span class="fu">|</span>   conference <span class="fu">&amp;</span> organizer <span class="fu">&amp;</span> name</a></code></pre></div>
+<p>It seems that we can define multiple records with the same field name, but we are not allowed to use it.</p>
+<h3 id="is-that-it-are-we-done">Is that it? Are we done?</h3>
+<p>Before we give up, there is fortunately one more trick we can use. It’s called <code>OverloadedLabels</code> but it requires bunch of other extendsions to be enabled. We turned them on for the whole project by modifing the cabal file (along with the <code>DuplicatedRecordFields</code> that’ve used before)</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb23-1" title="1">   exposed-modules:</a>
+<a class="sourceLine" id="cb23-2" title="2">       EncodePanda.Lens</a>
+<a class="sourceLine" id="cb23-3" title="3">       EncodePanda.Lens2</a>
+<a class="sourceLine" id="cb23-4" title="4"><span class="va">+      EncodePanda.OverloadedLabels</span></a>
+<a class="sourceLine" id="cb23-5" title="5">   hs-source-dirs:</a>
+<a class="sourceLine" id="cb23-6" title="6">       src</a>
+<a class="sourceLine" id="cb23-7" title="7">   build-depends:</a>
+<a class="sourceLine" id="cb23-8" title="8">         base &gt;=4.7 &amp;&amp; &lt;5</a>
+<a class="sourceLine" id="cb23-9" title="9">   default-language: Haskell2010</a>
+<a class="sourceLine" id="cb23-10" title="10"><span class="va">+  default-extensions:</span></a>
+<a class="sourceLine" id="cb23-11" title="11"><span class="va">+       DataKinds</span></a>
+<a class="sourceLine" id="cb23-12" title="12"><span class="va">+     , DuplicateRecordFields</span></a>
+<a class="sourceLine" id="cb23-13" title="13"><span class="va">+     , FlexibleInstances</span></a>
+<a class="sourceLine" id="cb23-14" title="14"><span class="va">+     , MultiParamTypeClasses</span></a>
+<a class="sourceLine" id="cb23-15" title="15"><span class="va">+     , OverloadedLabels</span></a>
+<a class="sourceLine" id="cb23-16" title="16"><span class="va">+     , TypeApplications</span></a></code></pre></div>
+<p>What <code>OverloadedLabels</code> gives us is a typeclass <code>IsLabel</code> from <code>GHC.OverloadedLabels</code></p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb24-1" title="1"><span class="kw">module</span> <span class="dt">GHC.OverloadedLabels</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb24-2" title="2">(<span class="fu">...</span>)</a>
+<a class="sourceLine" id="cb24-3" title="3"><span class="kw">class</span> <span class="dt">IsLabel</span> (<span class="ot">x ::</span> <span class="dt">Symbol</span>) a <span class="kw">where</span></a>
+<a class="sourceLine" id="cb24-4" title="4"><span class="ot">  fromLabel ::</span> a</a></code></pre></div>
+<p>It is a typeclass that we define for a particular type <code>a</code> and a <code>Symbol</code> (think of it as type level <code>String</code>). As an example we can create an instance of it for a <code>Speaker</code> and <code>&quot;encodepanda&quot;</code></p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb25-1" title="1"><span class="kw">instance</span> <span class="dt">IsLabel</span> <span class="st">&quot;encodepanda&quot;</span> <span class="dt">Speaker</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb25-2" title="2">  fromLabel <span class="fu">=</span> <span class="dt">Speaker</span></a>
+<a class="sourceLine" id="cb25-3" title="3">    { name <span class="fu">=</span> <span class="dt">Name</span> <span class="st">&quot;Pawel&quot;</span> <span class="st">&quot;Szulc&quot;</span></a>
+<a class="sourceLine" id="cb25-4" title="4">    , slidesReady <span class="fu">=</span> <span class="dt">False</span></a>
+<a class="sourceLine" id="cb25-5" title="5">    }</a></code></pre></div>
+<p>And now can us it as we would normally use any other typeclass.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb26-1" title="1"><span class="ot">pawel ::</span> <span class="dt">Speaker</span></a>
+<a class="sourceLine" id="cb26-2" title="2">pawel <span class="fu">=</span> fromLabel <span class="fu">@</span><span class="st">&quot;encodepanda&quot;</span></a></code></pre></div>
+<p>But <code>OverloadedLabels</code> comes with a nice syntatic sugar where we can reference just the symbol directly by prefixing the <code>Symbol</code> with a hash <code>#</code> and let the type infernece magic do the rest work for us.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb27-1" title="1"> </a>
+<a class="sourceLine" id="cb27-2" title="2"> -- start snippet pawel</a>
+<a class="sourceLine" id="cb27-3" title="3"> pawel :: Speaker</a>
+<a class="sourceLine" id="cb27-4" title="4"><span class="st">-pawel = fromLabel @&quot;encodepanda&quot;</span></a>
+<a class="sourceLine" id="cb27-5" title="5"><span class="va">+pawel = #encodepanda</span></a>
+<a class="sourceLine" id="cb27-6" title="6"> -- end snippet pawel</a></code></pre></div>
+<p>Underneath it desugars to a function call to <code>fromLabel</code>.</p>
+<h3 id="leveraging-overloadedlabels-for-record-access">Leveraging OverloadedLabels for record access</h3>
+<p>We can now take <code>OverloadedLabels</code> for a spin, see if they can help us with our issue. As a reminder, the problem at hand is a fact that (even though we have <code>DuplicateRecordFields</code> turned on) we can not reuse duplicated accesor function</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb28-1" title="1"><span class="fu">$&gt;</span> cabal build</a>
+<a class="sourceLine" id="cb28-2" title="2"></a>
+<a class="sourceLine" id="cb28-3" title="3">src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">22</span><span class="fu">:</span><span class="dv">5</span><span class="fu">:</span> <span class="fu">error:</span></a>
+<a class="sourceLine" id="cb28-4" title="4">    <span class="dt">Multiple</span> declarations <span class="kw">of</span> ‘name’</a>
+<a class="sourceLine" id="cb28-5" title="5">    <span class="dt">Declared</span> at<span class="fu">:</span> src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">15</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb28-6" title="6">                 src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">22</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb28-7" title="7">   <span class="fu">|</span></a>
+<a class="sourceLine" id="cb28-8" title="8"><span class="dv">22</span> <span class="fu">|</span>   {<span class="ot"> name ::</span> <span class="dt">Name</span></a>
+<a class="sourceLine" id="cb28-9" title="9">   <span class="fu">|</span>     <span class="fu">^^^^</span></a>
+<a class="sourceLine" id="cb28-10" title="10"></a>
+<a class="sourceLine" id="cb28-11" title="11">src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">22</span><span class="fu">:</span><span class="dv">5</span><span class="fu">:</span> <span class="fu">error:</span></a>
+<a class="sourceLine" id="cb28-12" title="12">    <span class="dt">Multiple</span> declarations <span class="kw">of</span> ‘name’</a>
+<a class="sourceLine" id="cb28-13" title="13">    <span class="dt">Declared</span> at<span class="fu">:</span> src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">7</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb28-14" title="14">                 src<span class="fu">/</span><span class="dt">EncodePanda</span><span class="fu">/</span>Lens2.hs<span class="fu">:</span><span class="dv">22</span><span class="fu">:</span><span class="dv">5</span></a>
+<a class="sourceLine" id="cb28-15" title="15">   <span class="fu">|</span></a>
+<a class="sourceLine" id="cb28-16" title="16"><span class="dv">22</span> <span class="fu">|</span>   {<span class="ot"> name ::</span> <span class="dt">Name</span></a>
+<a class="sourceLine" id="cb28-17" title="17">   <span class="fu">|</span>     <span class="fu">^^^^</span></a></code></pre></div>
+<p>The idea is to provide different instances for <code>&quot;name&quot;</code> and different accesor functions called <code>name</code></p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb29-1" title="1"> import Data.Function ((&amp;))</a>
+<a class="sourceLine" id="cb29-2" title="2"><span class="va">+import GHC.OverloadedLabels (IsLabel (..))</span></a>
+<a class="sourceLine" id="cb29-3" title="3"> </a>
+<a class="sourceLine" id="cb29-4" title="4"> -- start snippet conference-datatype</a>
+<a class="sourceLine" id="cb29-5" title="5"> data Conference = Conference</a>
+<a class="sourceLine" id="cb29-6" title="6">   } deriving Show</a>
+<a class="sourceLine" id="cb29-7" title="7"> -- end snippet conference-datatype</a>
+<a class="sourceLine" id="cb29-8" title="8"> </a>
+<a class="sourceLine" id="cb29-9" title="9"><span class="va">+instance IsLabel &quot;name&quot; (Conference -&gt; String) where</span></a>
+<a class="sourceLine" id="cb29-10" title="10"><span class="va">+   fromLabel = name</span></a>
+<a class="sourceLine" id="cb29-11" title="11"><span class="va">+</span></a>
+<a class="sourceLine" id="cb29-12" title="12"> -- start snippet organizer-datatype</a>
+<a class="sourceLine" id="cb29-13" title="13"> data Organizer = Organizer</a>
+<a class="sourceLine" id="cb29-14" title="14">   { name    :: Name</a>
+<a class="sourceLine" id="cb29-15" title="15">   } deriving Show</a>
+<a class="sourceLine" id="cb29-16" title="16"> -- end snippet organizer-datatype</a>
+<a class="sourceLine" id="cb29-17" title="17"> </a>
+<a class="sourceLine" id="cb29-18" title="18"><span class="va">+instance IsLabel &quot;name&quot; (Organizer -&gt; Name) where</span></a>
+<a class="sourceLine" id="cb29-19" title="19"><span class="va">+   fromLabel = name</span></a>
+<a class="sourceLine" id="cb29-20" title="20"><span class="va">+</span></a>
+<a class="sourceLine" id="cb29-21" title="21"> -- start snippet speaker-datatype</a>
+<a class="sourceLine" id="cb29-22" title="22"> data Speaker = Speaker</a>
+<a class="sourceLine" id="cb29-23" title="23">   { name :: Name</a>
+<a class="sourceLine" id="cb29-24" title="24">   } deriving Show</a>
+<a class="sourceLine" id="cb29-25" title="25"> -- end snippet speaker-datatype</a>
+<a class="sourceLine" id="cb29-26" title="26"> </a>
+<a class="sourceLine" id="cb29-27" title="27"><span class="va">+instance IsLabel &quot;name&quot; (Speaker -&gt; Name) where</span></a>
+<a class="sourceLine" id="cb29-28" title="28"><span class="va">+   fromLabel = name</span></a>
+<a class="sourceLine" id="cb29-29" title="29"><span class="va">+</span></a>
+<a class="sourceLine" id="cb29-30" title="30"> -- start snippet name-datatype</a>
+<a class="sourceLine" id="cb29-31" title="31"> data Name = Name</a>
+<a class="sourceLine" id="cb29-32" title="32">   { firstName :: String</a></code></pre></div>
+<p>It is suprising that even though we are reusing <code>name</code> functions to implement those typeclasses, the compiler is suddenly happy. In other words: we’ve build up this boilerplatte in order to workaround the fact that different accesor functions that have the same names could not be used. At the same time that workaround is making use of those functions. Why this is happening is probably a good idea for a different project. For now lets ignore this suprising effect, and celebarate the fact that we can finally can write a function like this</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb30-1" title="1"><span class="ot">organizerName ::</span> <span class="dt">Conference</span> <span class="ot">-&gt;</span> <span class="dt">Name</span></a>
+<a class="sourceLine" id="cb30-2" title="2">organizerName conference <span class="fu">=</span></a>
+<a class="sourceLine" id="cb30-3" title="3">  conference <span class="fu">&amp;</span> organizer <span class="fu">&amp;</span> <span class="fu">#</span>name</a></code></pre></div>
+<p>So yes, if looking at how accessing records is encoded in Haskell makes you want to do the following</p>
+<p><img src="../images/eyes.jpg" /></p>
+<p>I honestly don’t blame you. But remember, this is only half of the story, we still need figure out the way how to set values into records.</p>
+<h1 id="settnig-values">Settnig values</h1>
+<p>Imagine we have a value of type <code>Conference</code></p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="ot">conference ::</span> <span class="dt">Conference</span></a>
+<a class="sourceLine" id="cb31-2" title="2">conference <span class="fu">=</span> <span class="dt">Conference</span></a>
+<a class="sourceLine" id="cb31-3" title="3">  { name <span class="fu">=</span> <span class="st">&quot;Haskell.Love&quot;</span></a>
+<a class="sourceLine" id="cb31-4" title="4">  , organizer <span class="fu">=</span> oli</a>
+<a class="sourceLine" id="cb31-5" title="5">  , speakers <span class="fu">=</span> []</a>
+<a class="sourceLine" id="cb31-6" title="6">  }</a></code></pre></div>
+<p>We also have two speakers who would love to be part of this conference</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb32-1" title="1"><span class="ot">pawel ::</span> <span class="dt">Speaker</span></a>
+<a class="sourceLine" id="cb32-2" title="2">pawel <span class="fu">=</span> <span class="dt">Speaker</span></a>
+<a class="sourceLine" id="cb32-3" title="3">  { name <span class="fu">=</span> <span class="dt">Name</span> <span class="st">&quot;Pawel&quot;</span> <span class="st">&quot;Szulc&quot;</span></a>
+<a class="sourceLine" id="cb32-4" title="4">  , slidesReady <span class="fu">=</span> <span class="dt">False</span></a>
+<a class="sourceLine" id="cb32-5" title="5">  }</a>
+<a class="sourceLine" id="cb32-6" title="6"></a>
+<a class="sourceLine" id="cb32-7" title="7"><span class="ot">marcin ::</span> <span class="dt">Speaker</span></a>
+<a class="sourceLine" id="cb32-8" title="8">marcin <span class="fu">=</span> <span class="dt">Speaker</span></a>
+<a class="sourceLine" id="cb32-9" title="9">  { name <span class="fu">=</span> <span class="dt">Name</span> <span class="st">&quot;Marcin&quot;</span> <span class="st">&quot;Rzeznicki&quot;</span></a>
+<a class="sourceLine" id="cb32-10" title="10">  , slidesReady <span class="fu">=</span> <span class="dt">True</span></a>
+<a class="sourceLine" id="cb32-11" title="11">  }</a></code></pre></div>
+<p>At first, setting a new value does not seem to scary.</p>
+<pre><code>conference { speakers = [ pawel, marcin ] }</code></pre>
+<p>It seems pretty reasonable - it reuses syntax for the creation of a value. Small, nice, compact. However, the moment you try to do something a bit more complicated, things get really messy really quickly.</p>
+<p>For example something as simple as making all speakrs for a given conference marked as not ready</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb34-1" title="1"><span class="ot">allSpeakersNotReady ::</span> <span class="dt">Conference</span> <span class="ot">-&gt;</span> <span class="dt">Conference</span></a>
+<a class="sourceLine" id="cb34-2" title="2">allSpeakersNotReady conference <span class="fu">=</span></a>
+<a class="sourceLine" id="cb34-3" title="3">  <span class="kw">let</span></a>
+<a class="sourceLine" id="cb34-4" title="4">    oldSpeakers <span class="fu">=</span> conference <span class="fu">&amp;</span> speakers</a>
+<a class="sourceLine" id="cb34-5" title="5">  <span class="kw">in</span></a>
+<a class="sourceLine" id="cb34-6" title="6">    conference {</a>
+<a class="sourceLine" id="cb34-7" title="7">      speakers <span class="fu">=</span></a>
+<a class="sourceLine" id="cb34-8" title="8">	    <span class="fu">fmap</span> (\s <span class="ot">-&gt;</span> s { slidesReady <span class="fu">=</span> <span class="dt">False</span>}) oldSpeakers</a>
+<a class="sourceLine" id="cb34-9" title="9">    }</a></code></pre></div>
+<p>Or modifing organizator’s email address using a function</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb35-1" title="1"><span class="ot">changeOrganizerEmail ::</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>) <span class="ot">-&gt;</span> <span class="dt">Conference</span> <span class="ot">-&gt;</span>  <span class="dt">Conference</span></a>
+<a class="sourceLine" id="cb35-2" title="2">changeOrganizerEmail modifyEmail conference <span class="fu">=</span></a>
+<a class="sourceLine" id="cb35-3" title="3">  <span class="kw">let</span></a>
+<a class="sourceLine" id="cb35-4" title="4">    oldOrganizer <span class="fu">=</span> conference <span class="fu">&amp;</span> organizer</a>
+<a class="sourceLine" id="cb35-5" title="5">    newContact <span class="fu">=</span> (oldOrganizer <span class="fu">&amp;</span> contact)</a>
+<a class="sourceLine" id="cb35-6" title="6">      { email <span class="fu">=</span> modifyEmail (oldOrganizer <span class="fu">&amp;</span> contact <span class="fu">&amp;</span> email)</a>
+<a class="sourceLine" id="cb35-7" title="7">      }</a>
+<a class="sourceLine" id="cb35-8" title="8">    newOrganizer <span class="fu">=</span> oldOrganizer { contact <span class="fu">=</span> newContact}</a>
+<a class="sourceLine" id="cb35-9" title="9">  <span class="kw">in</span></a>
+<a class="sourceLine" id="cb35-10" title="10">    conference { organizer <span class="fu">=</span> newOrganizer }</a></code></pre></div>
+<p>In both example we have to very explicitly say each little tiny detail of how the new value should look like. If that is not imperative programming, I don’t know what is.</p>
+<h3 id="now-what">Now what?</h3>
+<p>Is that it? Is there now hope for us? Where do we go from here? You will have to wait for Part 2 to get your questions answered. But fear not, you might get yet before Christmas :) Stay tooned!</p>
     </div>
 </article>
 
