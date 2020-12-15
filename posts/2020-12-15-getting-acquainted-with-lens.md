@@ -1,5 +1,5 @@
 ---
-title: Getting acquainted with Lens
+title: Getting acquainted with Lens (part 1)
 desc: All you wanted to know about Lens but dare to ask
 author: Pawel Szulc
 tags: haskell, lens
@@ -7,7 +7,7 @@ icon: lens.jpg
 disclaimer: Content of this blog and the source code is <a href="https://github.com/EncodePanda/bp-getting-acquainted-with-lens">available on Github</a>. Repository is divided into small commits so that you can follow along if you prefer jumping straight into the code. <br/> This post is based on a <a href="https://www.youtube.com/watch?v=LBiFYbQMAXc">talk</a> I did at Haskell.Love 2020
 ---
 
-## Introduction
+### Introduction
 
 In this post we will explore a concept of a Lens. More concretely the [Lens library](https://hackage.haskell.org/package/lens).
 
@@ -15,14 +15,15 @@ In this post we will explore a concept of a Lens. More concretely the [Lens libr
 2. How we can use them?
 3. How they are being implemented?
 
-## What problem they are trying to solve?
+### What problem they are trying to solve?
 
-It is my observation that any newcommer to the Haskell ecosystem, who gets excited with the langue, stumbles upon two limitations of the language design. Those are
+It is my observation that any newcommer to the Haskell ecosystem, who gets excited with the language, stumbles upon two limitations of the language design. Mainly:
 
 1. Record syntax
 2. Strings
 
-Those two are suprising to newcomers, especially because both record syntax and Strings are considered a no-brainer in almost every other programming language. Writing about String representation in Haskell deserves a blog post on its own. Today we want to focus on a *record syntax*, trying to understand what are its limitations and main source of frustration. And frustrating in did it is. Below few quotes scrapped from the Internet to back that claim.
+Those two are suprising to newcomers, especially because both record syntax and Strings are considered a no-brainer in almost every other programming language. Writing about String representation in Haskell deserves a blog post on its own. Today we want to focus on a **record syntax**, trying to understand what are its limitations and main source of frustration.
+And frustrating in did it is. Below few quotes scrapped from the Internet to back that claim.
 
 > *"The record system is a continual source of pain"*
 - Stephen Diehl
@@ -33,6 +34,8 @@ Those two are suprising to newcomers, especially because both record syntax and 
 
 > *"Shitty records."*
 - Someone on reddit
+
+### An example
 
 [Someone famous](https://en.wikipedia.org/wiki/Linus_Torvalds) once said "Talk is cheap, show me the code". In that sprit let's explore an example project in which those problems are clearly visible.
 
@@ -67,7 +70,6 @@ source-repository head
 library
   exposed-modules:
       EncodePanda.Lens
-      EncodePanda.Lens2
   hs-source-dirs:
       src
   build-depends:
@@ -126,9 +128,9 @@ data Address = Address
 
 ```
 
-Now we just need example of a conference organizer, a value that we could play in the REPL with. While creating the example I could not miss the opportunity to pay my tribute to [Oli Makhasoeva](https://twitter.com/Oli_kitty) - one of the best conference organizers on the planet, master mind behind such events as [Haskell Love](http://haskell.love) or [Scala Love](http://scala.love/conf).
+Now we just need example of a conference organizer, a value that we could play with in the REPL . While creating this blog post I could not miss the opportunity to pay my tribute to [Oli Makhasoeva](https://twitter.com/Oli_kitty) - one of the best conference organizers on the planet, master mind behind such events as [Haskell Love](http://haskell.love) or [Scala Love](http://scala.love/conf).
 
-With here consent, let's create a `oli` value of type `Organizer`
+Let's create a value of type `Organizer` called `oli`
 
 ```haskell
 oli :: Organizer
@@ -138,6 +140,8 @@ oli = Organizer
   }
 
 ```
+
+### Fetching values from records
 
 We can observe that both `name` and `contact` are in fact accessor functions that allow us to retrieve values from records
 
@@ -278,7 +282,15 @@ And things compile again!
 ```haskell
 $> cabal build
 
-Up to date
+Resolving dependencies...
+Build profile: -w ghc-8.10.2 -O1
+In order, the following will be built (use -v for more details):
+ - bp-getting-acquainted-with-lens-0.1.0.0 (lib) (configuration changed)
+Configuring library for bp-getting-acquainted-with-lens-0.1.0.0..
+Preprocessing library for bp-getting-acquainted-with-lens-0.1.0.0..
+Building library for bp-getting-acquainted-with-lens-0.1.0.0..
+[1 of 2] Compiling EncodePanda.Lens ( src/EncodePanda/Lens.hs, /Users/rabbit/projects/bp-getting-acquainted-with-lens/dist-newstyle/build/x86_64-osx/ghc-8.10.2/bp-getting-acquainted-with-lens-0.1.0.0/build/EncodePanda/Lens.o, /Users/rabbit/projects/bp-getting-acquainted-with-lens/dist-newstyle/build/x86_64-osx/ghc-8.10.2/bp-getting-acquainted-with-lens-0.1.0.0/build/EncodePanda/Lens.dyn_o ) [flags changed]
+[2 of 2] Compiling EncodePanda.Lens2 ( src/EncodePanda/Lens2.hs, /Users/rabbit/projects/bp-getting-acquainted-with-lens/dist-newstyle/build/x86_64-osx/ghc-8.10.2/bp-getting-acquainted-with-lens-0.1.0.0/build/EncodePanda/Lens2.o, /Users/rabbit/projects/bp-getting-acquainted-with-lens/dist-newstyle/build/x86_64-osx/ghc-8.10.2/bp-getting-acquainted-with-lens-0.1.0.0/build/EncodePanda/Lens2.dyn_o )
 
 ```
 
@@ -292,7 +304,7 @@ organizerName conference =
 
 compiler gives us a quick reality check
 
-```
+```haskell
 src/EncodePanda/Lens2.hs:76:28: error:
     Ambiguous occurrence ‘name’
     It could refer to
@@ -304,3 +316,224 @@ src/EncodePanda/Lens2.hs:76:28: error:
 ```
 
 It seems that we can define multiple records with the same field name, but we are not allowed to use it.
+
+### Is that it? Are we done?
+
+Before we give up, there is fortunately one more trick we can use. It's called `OverloadedLabels` but it requires bunch of other extendsions to be enabled. We turned them on for the whole project by modifing the cabal file (along with the `DuplicatedRecordFields` that've used before)
+
+```diff
+   exposed-modules:
+       EncodePanda.Lens
+       EncodePanda.Lens2
++      EncodePanda.OverloadedLabels
+   hs-source-dirs:
+       src
+   build-depends:
+         base >=4.7 && <5
+   default-language: Haskell2010
++  default-extensions:
++       DataKinds
++     , DuplicateRecordFields
++     , FlexibleInstances
++     , MultiParamTypeClasses
++     , OverloadedLabels
++     , TypeApplications
+
+```
+
+What `OverloadedLabels` gives us is a typeclass `IsLabel` from `GHC.OverloadedLabels`
+
+```haskell
+module GHC.OverloadedLabels where
+(...)
+class IsLabel (x :: Symbol) a where
+  fromLabel :: a
+```
+
+It is a typeclass that we define for a particular type `a` and a `Symbol` (think of it as type level `String`). As an example we can create an instance of it for a `Speaker` and `"encodepanda"`
+
+```haskell
+instance IsLabel "encodepanda" Speaker where
+  fromLabel = Speaker
+    { name = Name "Pawel" "Szulc"
+    , slidesReady = False
+    }
+
+```
+
+And now can us it as we would normally use any other typeclass.
+
+```haskell
+pawel :: Speaker
+pawel = fromLabel @"encodepanda"
+
+```
+
+But `OverloadedLabels` comes with a nice syntatic sugar where we can reference just the symbol directly by prefixing the `Symbol` with a hash `#` and let the type infernece magic do the rest work for us.
+
+```diff
+ 
+ -- start snippet pawel
+ pawel :: Speaker
+-pawel = fromLabel @"encodepanda"
++pawel = #encodepanda
+ -- end snippet pawel
+
+```
+
+Underneath it desugars to a function call to `fromLabel`.
+
+### Leveraging OverloadedLabels for record access
+
+We can now take `OverloadedLabels` for a spin, see if they can help us with our issue. As a reminder, the problem at hand is a fact that (even though we have `DuplicateRecordFields` turned on) we can not reuse duplicated accesor function
+
+```haskell
+$> cabal build
+
+src/EncodePanda/Lens2.hs:22:5: error:
+    Multiple declarations of ‘name’
+    Declared at: src/EncodePanda/Lens2.hs:15:5
+                 src/EncodePanda/Lens2.hs:22:5
+   |
+22 |   { name :: Name
+   |     ^^^^
+
+src/EncodePanda/Lens2.hs:22:5: error:
+    Multiple declarations of ‘name’
+    Declared at: src/EncodePanda/Lens2.hs:7:5
+                 src/EncodePanda/Lens2.hs:22:5
+   |
+22 |   { name :: Name
+   |     ^^^^
+```
+
+The idea is to provide different instances for `"name"` and different accesor functions called `name`
+
+```diff
+ import Data.Function ((&))
++import GHC.OverloadedLabels (IsLabel (..))
+ 
+ -- start snippet conference-datatype
+ data Conference = Conference
+   } deriving Show
+ -- end snippet conference-datatype
+ 
++instance IsLabel "name" (Conference -> String) where
++   fromLabel = name
++
+ -- start snippet organizer-datatype
+ data Organizer = Organizer
+   { name    :: Name
+   } deriving Show
+ -- end snippet organizer-datatype
+ 
++instance IsLabel "name" (Organizer -> Name) where
++   fromLabel = name
++
+ -- start snippet speaker-datatype
+ data Speaker = Speaker
+   { name :: Name
+   } deriving Show
+ -- end snippet speaker-datatype
+ 
++instance IsLabel "name" (Speaker -> Name) where
++   fromLabel = name
++
+ -- start snippet name-datatype
+ data Name = Name
+   { firstName :: String
+
+```
+
+It is suprising that even though we are reusing `name` functions to implement those typeclasses, the compiler is suddenly happy. In other words: we've build up this boilerplatte in order to workaround the fact that different accesor functions that have the same names could not be used. At the same time that workaround is making use of those functions. Why this is happening is probably a good idea for a different project.
+For now lets ignore this suprising effect, and celebarate the fact that we can finally can write a function like this
+
+```haskell
+organizerName :: Conference -> Name
+organizerName conference =
+  conference & organizer & #name
+
+```
+
+So yes, if looking at how accessing records is encoded in Haskell makes you want to do the following
+
+![](../images/eyes.jpg)
+
+I honestly don't blame you. But remember, this is only half of the story, we still need figure out the way how to set values into records.
+
+# Settnig values
+
+Imagine we have a value of type `Conference`
+
+```haskell
+conference :: Conference
+conference = Conference
+  { name = "Haskell.Love"
+  , organizer = oli
+  , speakers = []
+  }
+
+```
+
+We also have two speakers who would love to be part of this conference
+
+```haskell
+pawel :: Speaker
+pawel = Speaker
+  { name = Name "Pawel" "Szulc"
+  , slidesReady = False
+  }
+
+marcin :: Speaker
+marcin = Speaker
+  { name = Name "Marcin" "Rzeznicki"
+  , slidesReady = True
+  }
+
+```
+
+At first, setting a new value does not seem to scary.
+
+```
+conference { speakers = [ pawel, marcin ] }
+```
+
+It seems pretty reasonable - it reuses syntax for the creation of a value. Small, nice, compact.
+However, the moment you try to do something a bit more complicated, things get really messy really quickly.
+
+For example something as simple as making all speakrs for a given conference marked as not ready
+
+```haskell
+allSpeakersNotReady :: Conference -> Conference
+allSpeakersNotReady conference =
+  let
+    oldSpeakers = conference & speakers
+  in
+    conference {
+      speakers =
+	    fmap (\s -> s { slidesReady = False}) oldSpeakers
+    }
+
+```
+
+Or modifing organizator's email address using a function
+
+```haskell
+changeOrganizerEmail :: (String -> String) -> Conference ->  Conference
+changeOrganizerEmail modifyEmail conference =
+  let
+    oldOrganizer = conference & organizer
+    newContact = (oldOrganizer & contact)
+      { email = modifyEmail (oldOrganizer & contact & email)
+      }
+    newOrganizer = oldOrganizer { contact = newContact}
+  in
+    conference { organizer = newOrganizer }
+
+```
+
+In both example we have to very explicitly say each little tiny detail of how the new value should look like. If that is not imperative programming, I don't know what is.
+
+### Now what?
+
+Is that it? Is there now hope for us? Where do we go from here? You will have to wait for Part 2 to get your questions answered. But fear not, you might get yet before Christmas :) Stay tooned!
