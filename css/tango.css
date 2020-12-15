@@ -1,7 +1,7 @@
-a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { display: inline-block; line-height: 1.25; padding-left: 8px; }
 a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
 a.sourceLine:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
+.sourceCode { overflow: visible; padding-top: 6px; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
@@ -54,7 +54,7 @@ code span.ot { color: #8f5902; } /* Other */
 code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
 code span.sc { color: #000000; } /* SpecialChar */
 code span.ss { color: #4e9a06; } /* SpecialString */
-code span.st { color: #4e9a06; } /* String */
-code span.va { color: #000000; } /* Variable */
+code span.st { color: #ef2929; } /* String */
+code span.va { color: #4e9a06; } /* Variable */
 code span.vs { color: #4e9a06; } /* VerbatimString */
 code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
