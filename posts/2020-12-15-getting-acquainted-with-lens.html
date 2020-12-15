@@ -375,7 +375,7 @@
 <p>So yes, if looking at how accessing records is encoded in Haskell makes you want to do the following</p>
 <p><img src="../images/eyes.jpg" /></p>
 <p>I honestly don’t blame you. But remember, this is only half of the story, we still need figure out the way how to set values into records.</p>
-<h1 id="settnig-values">Settnig values</h1>
+<h1 id="setting-values">Setting values</h1>
 <p>Imagine we have a value of type <code>Conference</code></p>
 <div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="ot">conference ::</span> <span class="dt">Conference</span></a>
 <a class="sourceLine" id="cb31-2" title="2">conference <span class="fu">=</span> <span class="dt">Conference</span></a>
@@ -398,7 +398,7 @@
 <p>At first, setting a new value does not seem to scary.</p>
 <pre><code>conference { speakers = [ pawel, marcin ] }</code></pre>
 <p>It seems pretty reasonable - it reuses syntax for the creation of a value. Small, nice, compact. However, the moment you try to do something a bit more complicated, things get really messy really quickly.</p>
-<p>For example something as simple as making all speakrs for a given conference marked as not ready</p>
+<p>For example something as simple as making all speakers for a given conference marked as not ready</p>
 <div class="sourceCode" id="cb34"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb34-1" title="1"><span class="ot">allSpeakersNotReady ::</span> <span class="dt">Conference</span> <span class="ot">-&gt;</span> <span class="dt">Conference</span></a>
 <a class="sourceLine" id="cb34-2" title="2">allSpeakersNotReady conference <span class="fu">=</span></a>
 <a class="sourceLine" id="cb34-3" title="3">  <span class="kw">let</span></a>
