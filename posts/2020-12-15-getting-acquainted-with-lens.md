@@ -461,7 +461,7 @@ So yes, if looking at how accessing records is encoded in Haskell makes you want
 
 I honestly don't blame you. But remember, this is only half of the story, we still need figure out the way how to set values into records.
 
-# Settnig values
+# Setting values
 
 Imagine we have a value of type `Conference`
 
@@ -501,7 +501,7 @@ conference { speakers = [ pawel, marcin ] }
 It seems pretty reasonable - it reuses syntax for the creation of a value. Small, nice, compact.
 However, the moment you try to do something a bit more complicated, things get really messy really quickly.
 
-For example something as simple as making all speakrs for a given conference marked as not ready
+For example something as simple as making all speakers for a given conference marked as not ready
 
 ```haskell
 allSpeakersNotReady :: Conference -> Conference
