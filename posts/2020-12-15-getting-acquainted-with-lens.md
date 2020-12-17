@@ -4,7 +4,7 @@ desc: All you wanted to know about Lens but dare to ask
 author: Pawel Szulc
 tags: haskell, lens
 icon: lens.jpg
-disclaimer: Content of this blog and the source code is <a href="https://github.com/EncodePanda/bp-getting-acquainted-with-lens">available on Github</a>. Repository is divided into small commits so that you can follow along if you prefer jumping straight into the code. <br/> This post is based on a <a href="https://www.youtube.com/watch?v=LBiFYbQMAXc">talk</a> I did at Haskell.Love 2020
+disclaimer: Content of this blog and the source code is <a href="https://github.com/EncodePanda/bp-getting-acquainted-with-lens">available on Github</a>. Repository is divided into small commits so that you can follow along if you prefer jumping straight into the code. <br/> This post is based on a <a href="https://www.youtube.com/watch?v=LBiFYbQMAXc">talk</a> I did at Haskell.Love 2020 <br/> I want to personally thank <a href="https://twitter.com/cateroxl">@cateroxl</a> for proof-reading and helping me fix all the typos I've created while writing this post. <a href="https://twitter.com/cateroxl">@cateroxl</a> you rock!
 ---
 
 ### Introduction
@@ -17,20 +17,19 @@ In this post we will explore a concept of a Lens. More concretely the [Lens libr
 
 ### What problem they are trying to solve?
 
-It is my observation that any newcommer to the Haskell ecosystem, who gets excited with the language, stumbles upon two limitations of the language design. Mainly:
+It is my observation that any newcomer to the Haskell ecosystem, who gets excited with the language, stumbles upon two limitations of the language design. Mainly:
 
 1. Record syntax
 2. Strings
 
-Those two are suprising to newcomers, especially because both record syntax and Strings are considered a no-brainer in almost every other programming language. Writing about String representation in Haskell deserves a blog post on its own. Today we want to focus on a **record syntax**, trying to understand what are its limitations and main source of frustration.
-And frustrating in did it is. Below few quotes scrapped from the Internet to back that claim.
+Those two are suprising to newcomers, especially because both record syntax and strings are considered a no-brainer in almost every other programming language. Writing about string representation in Haskell deserves a blog post on its own. Today we want to focus on **record syntax**, trying to understand what are its limitations and main source of frustration.
+And frustrating indeed it is. Below are a few quotes scrapped from the Internet to back that claim.
 
 > *"The record system is a continual source of pain"*
 - Stephen Diehl
 
 > *"What is your least favorite thing about Haskell? Records are still tedious"*
 - 2018 State of Haskell Survey
-
 
 > *"Shitty records."*
 - Someone on reddit
@@ -39,14 +38,14 @@ And frustrating in did it is. Below few quotes scrapped from the Internet to bac
 
 [Someone famous](https://en.wikipedia.org/wiki/Linus_Torvalds) once said "Talk is cheap, show me the code". In that sprit let's explore an example project in which those problems are clearly visible.
 
-We will use the latest version of GHC Haskell
+We will use the latest version of GHC Haskell:
 
 ```bash
 The Glorious Glasgow Haskell Compilation System, version 8.10.2
 
 ```
 
-and a standard cabal project
+and a standard cabal project:
 
 ```bash
 cabal-version: 2.1
@@ -78,7 +77,7 @@ library
 
 ```
 
-Imagine we are writing a tool allowing conference organizers to maintain their events. We have a datatype `Conference`
+Imagine we are writing a tool allowing conference organizers to maintain their events. We have a datatype `Conference`:
 
 ```haskell
 data Conference = Conference
@@ -88,7 +87,7 @@ data Conference = Conference
 
 ```
 
-where `Organizer` is
+where `Organizer` is:
 
 ```haskell
 data Organizer = Organizer
@@ -98,7 +97,7 @@ data Organizer = Organizer
 
 ```
 
-and `Speaker` is
+and `Speaker` is:
 
 ```haskell
 data Speaker = Speaker
@@ -107,7 +106,7 @@ data Speaker = Speaker
 
 ```
 
-Organizer has a `Name` and `Address`. `Name` is a simple record with `firstName` and `lastName`
+Organizer has a `Name` and `Address`. `Name` is a simple record with `firstName` and `lastName`:
 
 ```haskell
 data Name = Name
@@ -117,7 +116,7 @@ data Name = Name
 
 ```
 
-and `Address` encapsulates `street`, `city` and `country`
+and `Address` encapsulates `street`, `city` and `country`:
 
 ```haskell
 data Address = Address
@@ -128,9 +127,9 @@ data Address = Address
 
 ```
 
-Now we just need example of a conference organizer, a value that we could play with in the REPL . While creating this blog post I could not miss the opportunity to pay my tribute to [Oli Makhasoeva](https://twitter.com/Oli_kitty) - one of the best conference organizers on the planet, master mind behind such events as [Haskell Love](http://haskell.love) or [Scala Love](http://scala.love/conf).
+Now we just need an example of a conference organizer, a value that we could play with in the REPL. While creating this blog post, I could not miss the opportunity to pay my tribute to [Oli Makhasoeva](https://twitter.com/Oli_kitty) - one of the best conference organizers on the planet, the master mind behind such events as [Haskell Love](http://haskell.love) or [Scala Love](http://scala.love/conf).
 
-Let's create a value of type `Organizer` called `oli`
+Let's create a value of type `Organizer` called `oli`:
 
 ```haskell
 oli :: Organizer
@@ -143,7 +142,7 @@ oli = Organizer
 
 ### Fetching values from records
 
-We can observe that both `name` and `contact` are in fact accessor functions that allow us to retrieve values from records
+We can observe that both `name` and `contact` are in fact accessor functions that allow us to retrieve values from records:
 
 ```Haskell
 ghci> :l src/EncodePanda/Lens.hs
@@ -158,7 +157,7 @@ ghci> contact oli
 ```
 
 
-This can even look nicer if we use `&` operator from `Data.Function`
+This can even look nicer if we use `&` operator from `Data.Function`:
 
 
 ```Haskell
@@ -168,7 +167,7 @@ ghci> :t (&)
 ```
 
 
-Here we see that `&` is a simple function application, where instead of providing function name and the argument (as we would normally do)
+Here we see that `&` is a simple function application, where instead of providing function name and the argument (as we would normally do):
 
 ```Haskell
 ghci> length [4, 6, 8]
@@ -176,7 +175,7 @@ ghci> length [4, 6, 8]
 ```
 
 
-we provide first the argument and then the function name
+we provide first the argument and then the function name:
 
 ```Haskell
 ghci> [4, 6, 8] & length
@@ -184,7 +183,7 @@ ghci> [4, 6, 8] & length
 ```
 
 
-This allow us to change previous call to `name` from
+This allow us to change previous call to `name` from:
 
 ```Haskell
 ghci> name oli
@@ -192,7 +191,7 @@ ghci> name oli
 ```
 
 
-to
+to:
 
 ```Haskell
 ghci> oli & name
@@ -200,7 +199,7 @@ ghci> oli & name
 ```
 
 
-It does not seem much at first, but you can observe that this approach composes nicely when you want to read value of a deeply nested record.
+It does not seem much at first, but you can observe that this approach composes nicely when you want to read the value of a deeply nested record:
 
 ```Haskell
 ghci> oli & name & firstName
@@ -208,7 +207,7 @@ ghci> oli & name & firstName
 ```
 
 
-This resembles dot-like record access that is available in other languages. Correctly formated makes accessing deeply nested values a pleasure experience
+This resembles dot-like record access that is available in other languages. Correctly formatted makes accessing deeply nested values a pleasure experience
 
 ```haskell
 organizerCountry :: Conference -> String
@@ -220,7 +219,7 @@ organizerCountry conf =
 
 ```
 
-But when we do a slight modification to our code, where not only `Organizer` has a `name` field
+But when we do a slight modification to our code, where not only `Organizer` has a `name` field:
 
 ```diff
  module EncodePanda.Lens2 where
@@ -247,7 +246,7 @@ But when we do a slight modification to our code, where not only `Organizer` has
 
 ```
 
-the code suddenly stops compiling
+the code suddenly stops compiling:
 
 ```haskell
 $> cabal build
@@ -269,7 +268,7 @@ src/EncodePanda/Lens2.hs:22:5: error:
    |     ^^^^
 ```
 
-There is one trick we could do make it work... Have you guess it? Yes, it is GHC, we can always add a language extension
+There is one trick we could do make it work...Have you guessed it? Yes, it is GHC. We can always add a language extension:
 
 ```diff
 +{-# LANGUAGE DuplicateRecordFields #-}
@@ -294,7 +293,7 @@ Building library for bp-getting-acquainted-with-lens-0.1.0.0..
 
 ```
 
-But when we try to use the `name` function
+But when we try to use the `name` function:
 
 ```haskell
 organizerName :: Conference -> Name
@@ -302,7 +301,7 @@ organizerName conference =
   conference & organizer & name
 ```
 
-compiler gives us a quick reality check
+The compiler gives us a quick reality check:
 
 ```haskell
 src/EncodePanda/Lens2.hs:76:28: error:
@@ -319,7 +318,7 @@ It seems that we can define multiple records with the same field name, but we ar
 
 ### Is that it? Are we done?
 
-Before we give up, there is fortunately one more trick we can use. It's called `OverloadedLabels` but it requires bunch of other extendsions to be enabled. We turned them on for the whole project by modifing the cabal file (along with the `DuplicatedRecordFields` that've used before)
+Before we give up, there is fortunately one more trick we can use. It's called `OverloadedLabels` but it requires a bunch of other extendsions to be enabled. We enabled them for the whole project by modifing the cabal file (along with the `DuplicatedRecordFields` that've used before):
 
 ```diff
    exposed-modules:
@@ -341,7 +340,7 @@ Before we give up, there is fortunately one more trick we can use. It's called `
 
 ```
 
-What `OverloadedLabels` gives us is a typeclass `IsLabel` from `GHC.OverloadedLabels`
+What `OverloadedLabels` gives us is a typeclass `IsLabel` from `GHC.OverloadedLabels`:
 
 ```haskell
 module GHC.OverloadedLabels where
@@ -350,7 +349,7 @@ class IsLabel (x :: Symbol) a where
   fromLabel :: a
 ```
 
-It is a typeclass that we define for a particular type `a` and a `Symbol` (think of it as type level `String`). As an example we can create an instance of it for a `Speaker` and `"encodepanda"`
+It is a typeclass that we define for a particular type `a` and a `Symbol` (think of it as type level `String`). As an example we can create an instance of it for a `Speaker` and `"encodepanda"`:
 
 ```haskell
 instance IsLabel "encodepanda" Speaker where
@@ -361,7 +360,7 @@ instance IsLabel "encodepanda" Speaker where
 
 ```
 
-And now can us it as we would normally use any other typeclass.
+And now we can use it as we would normally use any other typeclass:
 
 ```haskell
 pawel :: Speaker
@@ -369,7 +368,7 @@ pawel = fromLabel @"encodepanda"
 
 ```
 
-But `OverloadedLabels` comes with a nice syntatic sugar where we can reference just the symbol directly by prefixing the `Symbol` with a hash `#` and let the type infernece magic do the rest work for us.
+But `OverloadedLabels` comes with a nice syntatic sugar where we can reference just the symbol directly by prefixing the `Symbol` with a hash `#` and let the type inference magic do the rest work for us.
 
 ```diff
  
@@ -381,11 +380,11 @@ But `OverloadedLabels` comes with a nice syntatic sugar where we can reference j
 
 ```
 
-Underneath it desugars to a function call to `fromLabel`.
+Underneath, it desugars to a function call to `fromLabel`.
 
 ### Leveraging OverloadedLabels for record access
 
-We can now take `OverloadedLabels` for a spin, see if they can help us with our issue. As a reminder, the problem at hand is a fact that (even though we have `DuplicateRecordFields` turned on) we can not reuse duplicated accesor function
+We can now take `OverloadedLabels` for a spin, to see if they can help us with our issue. As a reminder, the problem at hand is a fact that (even though we have `DuplicateRecordFields` turned on) we can not reuse duplicated accessor function:
 
 ```haskell
 $> cabal build
@@ -407,7 +406,7 @@ src/EncodePanda/Lens2.hs:22:5: error:
    |     ^^^^
 ```
 
-The idea is to provide different instances for `"name"` and different accesor functions called `name`
+The idea is to provide different instances for `"name"` and different accessor functions called `name`:
 
 ```diff
  import Data.Function ((&))
@@ -445,7 +444,7 @@ The idea is to provide different instances for `"name"` and different accesor fu
 
 ```
 
-It is suprising that even though we are reusing `name` functions to implement those typeclasses, the compiler is suddenly happy. In other words: we've build up this boilerplatte in order to workaround the fact that different accesor functions that have the same names could not be used. At the same time that workaround is making use of those functions. Why this is happening is probably a good idea for a different project.
+It is suprising that even though we are reusing `name` functions to implement those typeclasses, the compiler is suddenly happy. In other words: we've build up this boilerplate in order to workaround the fact that different accessor functions that have the same names could not be used. At the same time, that workaround is making use of those functions. Why this is happening is probably a good idea for a different project.
 For now lets ignore this suprising effect, and celebarate the fact that we can finally can write a function like this
 
 ```haskell
@@ -463,7 +462,7 @@ I honestly don't blame you. But remember, this is only half of the story, we sti
 
 # Setting values
 
-Imagine we have a value of type `Conference`
+Imagine we have a value of type `Conference`:
 
 ```haskell
 conference :: Conference
@@ -475,7 +474,7 @@ conference = Conference
 
 ```
 
-We also have two speakers who would love to be part of this conference
+We also have two speakers who would love to be part of this conference:
 
 ```haskell
 pawel :: Speaker
@@ -492,7 +491,7 @@ marcin = Speaker
 
 ```
 
-At first, setting a new value does not seem to scary.
+At first, setting a new value does not seem to be scary.
 
 ```
 conference { speakers = [ pawel, marcin ] }
@@ -501,7 +500,7 @@ conference { speakers = [ pawel, marcin ] }
 It seems pretty reasonable - it reuses syntax for the creation of a value. Small, nice, compact.
 However, the moment you try to do something a bit more complicated, things get really messy really quickly.
 
-For example something as simple as making all speakers for a given conference marked as not ready
+For example, something as simple as making all speakers for a given conference marked as not ready:
 
 ```haskell
 allSpeakersNotReady :: Conference -> Conference
@@ -516,7 +515,7 @@ allSpeakersNotReady conference =
 
 ```
 
-Or modifing organizator's email address using a function
+Or modifing an organizer's email address using a function:
 
 ```haskell
 changeOrganizerEmail :: (String -> String) -> Conference ->  Conference
@@ -536,4 +535,4 @@ In both example we have to very explicitly say each little tiny detail of how th
 
 ### Now what?
 
-Is that it? Is there now hope for us? Where do we go from here? You will have to wait for Part 2 to get your questions answered. But fear not, you might get yet before Christmas :) Stay tooned!
+Is that it? Is there now hope for us? Where do we go from here? You will have to wait for Part 2 to get your questions answered. But fear not, you might get it yet before Christmas :) Stay tooned!
